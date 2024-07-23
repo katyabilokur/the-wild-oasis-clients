@@ -5,7 +5,6 @@ import { auth, signIn, signOut } from "./auth";
 import { supabase } from "./supabase";
 import { getBookings } from "./data-service";
 import { redirect } from "next/navigation";
-import { revalidate } from "../about/page";
 
 async function verifyUserActionAllowed(bookingId, actionName) {
   const session = await auth();
@@ -14,8 +13,10 @@ async function verifyUserActionAllowed(bookingId, actionName) {
   //check if the booking to be deleted is in the list of the current session user
   const guestBookings = await getBookings(session.user.guestId);
   const guestBookingsIds = guestBookings.map((booking) => booking.id);
+  console.log(guestBookingsIds);
+  console.log(+bookingId);
 
-  if (!guestBookingsIds.includes(bookingId))
+  if (!guestBookingsIds.includes(+bookingId))
     throw new Error(`You are not allowed to ${actionName} this booking`);
 }
 
@@ -52,7 +53,7 @@ export async function updateGuestProfile(formData) {
 
 export async function updateReservation(formData) {
   const bookingId = formData.get("bookingId");
-  verifyUserActionAllowed(bookingId, "edit");
+  await verifyUserActionAllowed(bookingId, "edit");
 
   const observations = formData.get("observations");
   const numGuests = formData.get("numGuests");
@@ -71,11 +72,12 @@ export async function updateReservation(formData) {
   }
 
   revalidatePath("/account/reservations");
+  revalidatePath("/account/reservations/edit/[reservationId]", "page");
   redirect("/account/reservations");
 }
 
 export async function deleteBooking(bookingId) {
-  verifyUserActionAllowed(bookingId, "delete");
+  await verifyUserActionAllowed(bookingId, "delete");
 
   const { error } = await supabase
     .from("bookings")
