@@ -5,6 +5,7 @@ import { auth, signIn, signOut } from "./auth";
 import { supabase } from "./supabase";
 import { getBookings } from "./data-service";
 import { redirect } from "next/navigation";
+import { revalidate } from "../about/page";
 
 async function verifyUserActionAllowed(bookingId, actionName) {
   const session = await auth();
@@ -17,7 +18,6 @@ async function verifyUserActionAllowed(bookingId, actionName) {
   if (!guestBookingsIds.includes(bookingId))
     throw new Error(`You are not allowed to ${actionName} this booking`);
 }
-//--------
 
 export async function updateGuestProfile(formData) {
   //1. Authentication and Authorization
@@ -74,7 +74,7 @@ export async function updateReservation(formData) {
   redirect("/account/reservations");
 }
 
-export async function deleteReservation(bookingId) {
+export async function deleteBooking(bookingId) {
   verifyUserActionAllowed(bookingId, "delete");
 
   const { error } = await supabase
@@ -87,6 +87,39 @@ export async function deleteReservation(bookingId) {
   }
 
   revalidatePath("/account/reservations");
+}
+
+export async function createBooking(bookingData, formData) {
+  const session = await auth();
+  if (!session) throw new Error("You must be logged in");
+
+  //NEW: getting all data from the form at once
+  //const formDataObj = Object.entries(formData.entries());
+
+  //NOTE: axtra data validation can be added with a lib like "zod", for example
+
+  const newBooking = {
+    ...bookingData,
+    guestId: session.user.guestId,
+    numGuests: +formData.get("numGuests"),
+    observations: formData.get("observations").slice(0, 1000),
+    extrasPrice: 0,
+    totalPrice: bookingData.cabinPrice,
+    isPaid: false,
+    hasBreakfast: false,
+    status: "unconfirmed",
+
+    //...formDataObj,
+  };
+
+  const { error } = await supabase.from("bookings").insert([newBooking]);
+
+  if (error) {
+    throw new Error("Booking could not be created");
+  }
+
+  revalidatePath(`/cabins/${bookingData.cabinId}`);
+  redirect("/cabins/thankyou");
 }
 
 export async function signInAction() {

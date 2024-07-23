@@ -1,7 +1,7 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
 import { updateGuestProfile } from "../_lib/actions";
+import SubmittButton from "./SubmittButton";
 
 function UpdateProfileForm({ guest, children }) {
   const { fullName, email, nationality, nationalID, countryFlag } = guest;
@@ -34,13 +34,15 @@ function UpdateProfileForm({ guest, children }) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label htmlFor="nationality">Where are you from?</label>
-          <img
-            src={countryFlag}
-            width={20}
-            height={20}
-            alt="Country flag"
-            className="h-5 rounded-sm"
-          />
+          {countryFlag && (
+            <img
+              src={countryFlag}
+              width={20}
+              height={20}
+              alt="Country flag"
+              className="h-5 rounded-sm"
+            />
+          )}
         </div>
 
         {children}
@@ -56,24 +58,14 @@ function UpdateProfileForm({ guest, children }) {
       </div>
 
       <div className="flex justify-end items-center gap-6">
-        <Button />
+        <SubmittButton pendingLabel={"Updating details..."}>
+          Update profile
+        </SubmittButton>
       </div>
     </form>
   );
 }
 
-function Button() {
-  //NOTE: NEW: this new experimental hook returns info about the form where this component has been used. So that in a parent form!
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      disabled={pending}
-      className="bg-accent-500 px-8 py-4 text-primary-800 font-semibold hover:bg-accent-600 transition-all disabled:cursor-not-allowed disabled:bg-gray-500 disabled:text-gray-300"
-    >
-      {pending ? "Updating details..." : "Update profile"}
-    </button>
-  );
-}
+//"Updating details..." : ""}
 
 export default UpdateProfileForm;
