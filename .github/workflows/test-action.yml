@@ -23,5 +23,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build with Next.js
-        run: npm run next build
+        run: npm run build
         
