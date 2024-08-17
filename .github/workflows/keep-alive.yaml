@@ -1,0 +1,12 @@
+name: keep-alive
+
+on: [push]
+  # schedule:
+  #   - cron: "0 0 * * *"
+
+jobs:
+  test-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Make HTTP request
+        run: curl -L https://the-wild-oasis-kb.vercel.app/cabins
